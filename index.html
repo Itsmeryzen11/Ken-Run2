@@ -12,17 +12,27 @@
       margin: auto;
       background: #70c5ce;
     }
+    /* hidden mobile input */
+    #mobileUnlock {
+      position: absolute;
+      opacity: 0;
+      height: 0;
+      width: 0;
+    }
   </style>
 </head>
 <body>
+
+<input id="mobileUnlock" type="number" inputmode="numeric">
 
 <canvas id="game" width="400" height="600"></canvas>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+const mobileInput = document.getElementById("mobileUnlock");
 
-let unlocked = false;   // after 356
+let unlocked = false;
 let gameStarted = false;
 
 const password = "356";
@@ -45,32 +55,36 @@ let pipes = [];
 let frame = 0;
 let score = 0;
 
-// PASSWORD INPUT
+/* DESKTOP NUMBER INPUT */
 document.addEventListener("keydown", (e) => {
   if (!unlocked && e.key >= "0" && e.key <= "9") {
     input += e.key;
-
-    if (input === password) {
-      unlocked = true;
-    }
-
-    if (!password.startsWith(input)) {
-      input = "";
-    }
+    if (input === password) unlocked = true;
+    if (!password.startsWith(input)) input = "";
   }
 
-  // START GAME AFTER UNLOCK
   if (unlocked && !gameStarted && e.code === "Space") {
     gameStarted = true;
   }
 
-  // JUMP
   if (gameStarted && e.code === "Space") {
     bird.velocity = bird.lift;
   }
 });
 
-// CLICK TO START / JUMP
+/* MOBILE UNLOCK */
+canvas.addEventListener("touchstart", () => {
+  if (!unlocked) mobileInput.focus();
+});
+
+mobileInput.addEventListener("input", () => {
+  if (mobileInput.value === password) {
+    unlocked = true;
+    mobileInput.blur();
+  }
+});
+
+/* CLICK START / JUMP */
 canvas.addEventListener("click", () => {
   if (unlocked && !gameStarted) {
     gameStarted = true;
@@ -117,9 +131,7 @@ function updatePipes() {
       resetGame();
     }
 
-    if (pipe.x + pipe.width === bird.x) {
-      score++;
-    }
+    if (pipe.x + pipe.width === bird.x) score++;
   });
 
   pipes = pipes.filter(pipe => pipe.x + pipe.width > 0);
@@ -148,14 +160,12 @@ function drawStartText() {
 function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // AFTER 356 BUT BEFORE START
   if (unlocked && !gameStarted) {
     drawStartText();
     requestAnimationFrame(gameLoop);
     return;
   }
 
-  // BEFORE 356 → PURE BLANK
   if (!gameStarted) {
     requestAnimationFrame(gameLoop);
     return;
@@ -182,4 +192,3 @@ gameLoop();
 
 </body>
 </html>
-
